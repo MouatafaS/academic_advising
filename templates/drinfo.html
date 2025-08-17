@@ -1,0 +1,273 @@
+{% extends 'mainn.html' %}
+
+{% block body %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --accent-color: #0891b2;
+        --accent-hover: #0e7490;
+        --danger-color: #e11d48;
+        --danger-hover: #be123c;
+        --gray-color: #6b7280;
+        --light-gray: #f9fafb;
+        --border-color: #e5e7eb;
+        --text-color: #1f2937;
+        --font-family: 'Cairo', sans-serif;
+    }
+    .student-management-body {
+        font-family: var(--font-family);
+        background-color: var(--light-gray);
+        color: var(--text-color);
+        padding: 2rem;
+    }
+    .main-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .main-container h1 {
+        text-align: center;
+        font-size: 2rem;
+        margin-bottom: 2.5rem;
+    }
+    .add-form, .table-container {
+        background-color: #fff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2.5rem;
+    }
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .form-group label {
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    .form-group input {
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+    }
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        color: #fff;
+        text-decoration: none;
+    }
+    .btn-submit {
+        background-color: var(--accent-color);
+        width: 100%;
+        margin-top: 1rem;
+        grid-column: 1 / -1;
+    }
+    .minimal-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .minimal-table thead th {
+        text-align: right;
+        padding: 1rem;
+        color: var(--gray-color);
+        border-bottom: 2px solid var(--border-color);
+    }
+    .minimal-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .actions-cell form { display: inline-block; margin: 0;}
+    .actions-cell .btn { margin-left: 0.5rem; }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+    .btn-edit { background-color: var(--gray-color); }
+    .btn-delete { background-color: var(--danger-color); }
+    .modal {
+        display: none; 
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 25px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 8px;
+        animation: fadeIn 0.3s;
+    }
+    @keyframes fadeIn {
+        from {opacity: 0; transform: translateY(-20px);}
+        to {opacity: 1; transform: translateY(0);}
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+    .close-btn {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+
+<div class="student-management-body">
+    <main class="main-container">
+        <h1>نظام إدارة الطلاب</h1>
+        <section class="add-form">
+            <form action="/stsusername" method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="stusername">اللقب</label>
+                        <input type="text" id="stusername" name="stusername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">البريد الرسمي</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">كلمة المرور</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-submit">إضافة الطالب</button>
+            </form>
+        </section>
+
+        <section class="table-container">
+            {% if stssusername%}
+                <table class="minimal-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>اللقب</th>
+                            <th>البريد الرسمي</th>
+                            <th>تاريخ الإضافة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in stssusername %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ student.stusername }}</td>
+                            <td>{{ student.name }}</td>
+                            <td>{{ student.date_created.date() }}</td>
+                            <td class="actions-cell">
+                                <button type="button" class="btn btn-sm btn-edit edit-btn" 
+                                        data-id="{{ student.id }}" 
+                                        data-username="{{ student.stusername }}" 
+                                        data-name="{{ student.name }}">
+                                    تعديل
+                                </button>
+                                <form action="/stsusername/{{student.id}}/delete" method="POST" onsubmit="return confirm('هل أنت متأكد؟');">
+                                    <button type="submit" class="btn btn-sm btn-delete">حذف</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert">لا يوجد طلاب لعرضهم.</div>
+            {% endif %}
+        </section>
+    </main>
+</div>
+
+<!-- ▼▼▼ تم تعديل هذا الجزء ▼▼▼ -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>تعديل بيانات الطالب</h2>
+            <span class="close-btn">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="editForm" action="" method="POST">
+                <div class="form-group">
+                    <label for="edit_stusername">اللقب</label>
+                    <input type="text" id="edit_stusername" name="stusername" required>
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="edit_name">البريد الرسمي</label>
+                    <input type="text" id="edit_name" name="name" required>
+                </div>
+                <!-- ▼▼▼ تم إضافة هذا الحقل ▼▼▼ -->
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="edit_password">كلمة المرور الجديدة</label>
+                    <input type="password" id="edit_password" name="password" placeholder="اتركه فارغًا لعدم التغيير">
+                </div>
+                <button type="submit" class="btn btn-submit" style="margin-top: 1.5rem;">حفظ التعديلات</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('editModal');
+        const closeBtn = modal.querySelector('.close-btn');
+        const editForm = document.getElementById('editForm');
+        const usernameInput = document.getElementById('edit_stusername');
+        const nameInput = document.getElementById('edit_name');
+        // ▼▼▼ تم إضافة هذا السطر ▼▼▼
+        const passwordInput = document.getElementById('edit_password');
+        const editButtons = document.querySelectorAll('.edit-btn');
+
+        editButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const studentId = this.dataset.id;
+                const studentUsername = this.dataset.username;
+                const studentName = this.dataset.name;
+                
+                editForm.action = `/stsusername/${studentId}/edit`;
+                usernameInput.value = studentUsername;
+                nameInput.value = studentName;
+                // ▼▼▼ تم إضافة هذا السطر لتفريغ حقل الباسوورد عند فتح النافذة ▼▼▼
+                passwordInput.value = ''; 
+                
+                modal.style.display = 'block';
+            });
+        });
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+
+        window.addEventListener('click', function (event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        });
+    });
+</script>
+
+{% endblock %}

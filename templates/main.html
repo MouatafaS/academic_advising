@@ -1,0 +1,29 @@
+{%include 'mainn.html'%}
+
+{% block body%}
+
+
+    <div>
+   <div class="imagegif">
+  
+    <img src="{{url_for('static', filename='images/medlogo.gif')}}" class="imag" >
+    {%if session["name"] == True%}
+        <div class="btn">
+        <a class="button button1" href="/user" >MY schadule</a>
+        <a class="button button2" href="/student_advising"> Ask for advising session </a>
+        </div>
+    {%endif%}
+   {%if session["doctor"] != True%}
+   {%if session["name"] != True%}
+
+   <br>
+   <a class="button button1" href="/login-stu" >login As Student</a>
+  <a class="button button2" href="/login">login As Doctor</a>
+  </div>
+
+  {%endif%}
+  {%endif%}
+
+    </div>
+  
+{%endblock%}

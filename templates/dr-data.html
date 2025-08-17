@@ -1,0 +1,349 @@
+{% extends 'mainn.html' %}
+
+{% block body %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+.notification-container {
+  position: fixed;
+  top: 80px;
+right: 20px;
+z-index: 9999;
+display: flex;
+flex-direction: column;
+gap: 15px;
+}
+.notification {
+display: flex;
+align-items: center;
+padding: 15px;
+border-radius: 8px;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+width: 350px;
+border-left: 5px solid;
+opacity: 1;
+transition: opacity 0.5s, transform 0.5s;
+background-color: #fff;
+}
+.notification.success { border-color: #48bb78; }
+.notification.danger { border-color: #f56565; }
+.notification.warning { border-color: #ed8936; }
+.notification.info { border-color: #4299e1; }
+
+.notification-icon { font-size: 24px; margin-right: 15px; }
+.notification-content { flex-grow: 1; }
+.notification-title { font-weight: bold; margin: 0 0 5px 0; color: #333; }
+.notification-message { margin: 0; color: #555; }
+
+.notification[data-role="system"] .notification-icon::before { content: '⚙️'; }
+.notification[data-role="system"] .notification-title::before { content: 'تنبيه من النظام'; }
+.notification[data-role="security"] .notification-icon::before { content: '🛡️'; }
+.notification[data-role="security"] .notification-title::before { content: 'تنبيه أمني'; }
+.notification[data-role="message"] .notification-icon::before { content: '✉️'; }
+.notification[data-role="message"] .notification-title::before { content: 'رسالة جديدة'; }
+.notification[data-role="user_action"] .notification-icon::before { content: '👍'; }
+.notification[data-role="user_action"] .notification-title::before { content: 'تأكيد الإجراء'; }
+
+.notification-close-btn { background: none; border: none; font-size: 24px; color: #888; cursor: pointer; padding: 0 0 0 10px; }
+.notification.hidden { opacity: 0; transform: translateX(120%); }
+</style>
+
+<style>
+body {
+background-color: #f5f5f9;
+font-family: 'Public Sans', sans-serif;
+}
+.account-card {
+max-width: 950px;
+margin: 50px auto;
+padding: 2rem;
+background-color: #fff;
+border-radius: 0.6rem;
+box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+border: 1px solid #e7e7e8;
+}
+.account-card-content { display: flex; gap: 2.5rem; }
+.photo-upload-section { flex: 0 0 160px; text-align: center; }
+.profile-avatar { width: 130px; height: 130px; border-radius: 0.6rem; object-fit: cover; margin-bottom: 1.2rem; border: 1px solid #d9dee3; }
+.upload-buttons { display: flex; flex-direction: column; gap: 0.6rem; }
+.btn { padding: 0.6rem 1rem; border-radius: 0.375rem; border: 1px solid transparent; cursor: pointer; font-weight: 600; font-size: 0.93rem; transition: all 0.2s ease-in-out; text-align: center; display: inline-block; text-decoration: none; }
+.btn-primary { background-color: #696cff; color: #fff; border-color: #696cff; box-shadow: 0 2px 4px rgba(105, 108, 255, 0.4); }
+.btn-primary:hover { background-color: #5f61e6; color: #fff; }
+.btn-secondary { background-color: #fff; color: #8592a3; border-color: #d9dee3; }
+.btn-secondary:hover { background-color: #f8f8f8; color: #8592a3; }
+.upload-info { font-size: 0.8rem; color: #a1acb8; margin-top: 1rem; }
+.form-data-section { flex-grow: 1; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.form-group label { display: block; margin-bottom: 0.5rem; color: #566a7f; font-weight: 600; font-size: 0.9rem; }
+.form-group input[type="text"], .form-group input[type="email"] { width: 100%; padding: 0.8rem; border: 1px solid #d9dee3; border-radius: 0.375rem; font-size: 1rem; color: #566a7f; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
+.form-group input:focus { outline: none; border-color: #696cff; box-shadow: 0 0 0 3px rgba(105, 108, 255, 0.2); }
+.form-actions { margin-top: 2rem; display: flex; gap: 1rem; }
+.section-divider { border: 0; border-top: 1px solid #e7e7e8; margin: 2.5rem 0; }
+
+/* =========================================== */
+/* == (2) STYLES FOR DYNAMIC SCHEDULE TABLE == */
+/* =========================================== */
+.schedule-management-section h3 {
+color: #566a7f;
+font-weight: 700;
+margin-bottom: 1.5rem;
+}
+.schedule-table { width: 100%; border-collapse: collapse; }
+.schedule-table thead th { background-color: #f7f7f9; padding: 12px; border: 1px solid #e7e7e8; color: #566a7f; font-weight: 600; }
+.schedule-table tbody td { border: 1px solid #e7e7e8; padding: 10px; text-align: center; }
+.day-slot { cursor: pointer; transition: background-color 0.2s; font-size: 1rem; color: #a1acb8; }
+.day-slot.available { background-color: #d7f5e8; color: #13795b; font-weight: 600; }
+.day-slot.available::before { content: '✓ متاح'; }
+.delete-row-btn { background: none; border: none; color: #ff3e1d; font-size: 1.1rem; cursor: pointer; }
+.schedule-controls { margin-top: 1.5rem; padding: 1.5rem; background-color: #f7f8f9; border: 1px solid #e7e7e8; border-radius: 0.6rem; display: flex; justify-content: center; align-items: center; gap: 15px; }
+.schedule-controls input[type="time"] { padding: 10px; border: 1px solid #d9dee3; border-radius: 0.375rem; font-size: 1rem; }
+
+@media (max-width: 768px) {
+.account-card-content { flex-direction: column; }
+.form-grid { grid-template-columns: 1fr; }
+.schedule-controls { flex-direction: column; }
+}
+</style>
+
+<div class="notification-container">
+{# تذكير: هذا الكود يعتمد على وجود فلتر 'fromjson' في ملف app.py الرئيسي #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+{% set msg_data = message|fromjson %}
+<div class="notification {{ category }}" data-role="{{ msg_data.role }}">
+<div class="notification-icon"></div>
+<div class="notification-content">
+<p class="notification-title"></p>
+<p class="notification-message">{{ msg_data.message }}</p>
+</div>
+<button class="notification-close-btn">&times;</button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+</div>
+
+<div class="account-card" data-aos="fade-up">
+<div class="account-card-content">
+<div class="photo-upload-section">
+{% if doctor.profile_pic %}
+<img id="profile-avatar-display" src="{{ url_for('static', filename='images/doctor_images/' + doctor.profile_pic) }}" alt="Profile Avatar" class="profile-avatar">
+{% else %}
+<img id="profile-avatar-display" src="{{ url_for('static', filename='images/anonymous.jpeg') }}" alt="Profile Avatar" class="profile-avatar">
+{% endif %}
+
+<div class="upload-buttons">
+<form action="/dr/data" method="post" enctype="multipart/form-data">
+<input type="file" id="profile_picture" name="profile_picture" accept="image/*" style="display: none;">
+
+<label for="profile_picture" class="btn btn-primary">
+Upload new photo
+</label>
+</div>
+<p class="upload-info">Allowed JPG, GIF or PNG. Max size of 30MB</p>
+</div>
+
+<div class="form-data-section">
+<div class="form-grid">
+<div class="form-group">
+<label for="fullName">Full Name</label>
+<input type="text" id="fullName" name="fullName" value="{{ name or '' }}">
+</div>
+<div class="form-group">
+<label for="username">Username</label>
+<input type="text" id="username" name="username" value="{{ dr_username or '' }}" readonly style="background-color: #f1f1f2;">
+</div>
+<div class="form-group">
+<label for="email">E-mail</label>
+<input type="email" id="email" name="email" value="{{ email or '' }}">
+</div>
+<div class="form-group">
+<label for="certificates">Certificates</label>
+<input type="text" id="certificates" name="certificates" value="{{ certificates or '' }}">
+</div>
+<div class="form-group">
+<label for="password">Old Password</label>
+<input type="password" name="O_Password">
+</div>
+<div class="form-group">
+<label for="password">New Password</label>
+<input type="password" name="N_Password">
+</div>
+</div>
+<div class="form-actions">
+<button type="submit" class="btn btn-primary">Save Personal Data</button>
+<a href="#" class="btn btn-secondary">Cancel</a>
+</div>
+</form>
+</div>
+</div>
+
+<hr class="section-divider">
+
+<div class="schedule-management-section">
+    <h3>Weekly Schedule Management</h3>
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Sunday</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="schedule-body">
+            {% for slot in schedule %}
+            <tr>
+                <td><strong>{{ slot.time_range }}</strong></td>
+                <td class="day-slot{% if 'sun' in slot.days %} available{% endif %}" data-day="sun"></td>
+                <td class="day-slot{% if 'mon' in slot.days %} available{% endif %}" data-day="mon"></td>
+                <td class="day-slot{% if 'tue' in slot.days %} available{% endif %}" data-day="tue"></td>
+                <td class="day-slot{% if 'wed' in slot.days %} available{% endif %}" data-day="wed"></td>
+                <td class="day-slot{% if 'thu' in slot.days %} available{% endif %}" data-day="thu"></td>
+                <td><button class="delete-row-btn"><i class="fas fa-trash-alt"></i></button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="schedule-controls">
+        <label><strong>Add New Slot:</strong></label>
+        <label>From:</label> <input type="time" id="start-time">
+        <label>To:</label> <input type="time" id="end-time">
+        <button class="btn btn-primary" id="add-row-btn"><i class="fas fa-plus"></i> Add Slot</button>
+    </div>
+    <div class="form-actions" style="justify-content: flex-end;">
+        <button id="save-schedule-btn" class="btn btn-primary">Save Schedule</button>
+    </div>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Notification System Script (START) ---
+    const notifications = document.querySelectorAll('.notification');
+    notifications.forEach(notification => {
+        const role = notification.dataset.role;
+        const closeButton = notification.querySelector('.notification-close-btn');
+        const closeNotification = () => {
+            notification.classList.add('hidden');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 500);
+        };
+        closeButton.addEventListener('click', closeNotification);
+        if (role !== 'security') {
+            setTimeout(closeNotification, 5000);
+        }
+    });
+    // --- Notification System Script (END) ---
+
+    // --- Schedule Management Logic ---
+    const addBtn = document.getElementById('add-row-btn');
+    const scheduleBody = document.getElementById('schedule-body');
+    const saveBtn = document.getElementById('save-schedule-btn');
+    const startTimeInput = document.getElementById('start-time');
+    const endTimeInput = document.getElementById('end-time');
+
+    const createScheduleRow = (startTime, endTime, days) => {
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td><strong>${startTime} - ${endTime}</strong></td>
+            <td class="day-slot${days.includes('sun') ? ' available' : ''}" data-day="sun"></td>
+            <td class="day-slot${days.includes('mon') ? ' available' : ''}" data-day="mon"></td>
+            <td class="day-slot${days.includes('tue') ? ' available' : ''}" data-day="tue"></td>
+            <td class="day-slot${days.includes('wed') ? ' available' : ''}" data-day="wed"></td>
+            <td class="day-slot${days.includes('thu') ? ' available' : ''}" data-day="thu"></td>
+            <td><button class="delete-row-btn"><i class="fas fa-trash-alt"></i></button></td>
+        `;
+        return newRow;
+    };
+
+    addBtn.addEventListener('click', () => {
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+
+        if (!startTime || !endTime || startTime >= endTime) {
+            alert('Please enter a valid time range.');
+            return;
+        }
+
+        const newRow = createScheduleRow(startTime, endTime, []);
+        scheduleBody.appendChild(newRow);
+    });
+
+    scheduleBody.addEventListener('click', (e) => {
+        const target = e.target;
+        // Toggle 'available' class for day slots
+        if (target.classList.contains('day-slot')) {
+            target.classList.toggle('available');
+        }
+        // Remove row on delete button click
+        if (target.closest('.delete-row-btn')) {
+            target.closest('tr').remove();
+        }
+    });
+
+    saveBtn.addEventListener('click', () => {
+        const scheduleData = [];
+        scheduleBody.querySelectorAll('tr').forEach(row => {
+            const timeRange = row.cells[0].textContent;
+            const availableDays = Array.from(row.querySelectorAll('.day-slot.available'))
+                .map(slot => slot.dataset.day);
+                
+            scheduleData.push({ time: timeRange, days: availableDays });
+        });
+
+        fetch('/dr/save_schedule', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(scheduleData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تم حفظ الجدول بنجاح!');
+                window.location.reload();
+            } else {
+                alert('حدث خطأ أثناء الحفظ: ' + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('حدث خطأ في الاتصال بالخادم.');
+        });
+    });
+
+    const profileDataForm = document.getElementById('profile-data-form');
+    if (profileDataForm) {
+        profileDataForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log("Saving profile data...");
+            alert('Profile data saved!');
+        });
+    }
+});
+</script>
+
+<script>
+document.getElementById('profile_picture').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profile-avatar-display').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

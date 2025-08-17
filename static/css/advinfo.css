@@ -1,0 +1,35 @@
+
+.drinfo{
+    margin-right: 20%;
+    border: 2px solid #333;
+    height: max-content;
+    width: max-content;
+    float: left;
+    margin-left: 10%;
+    padding: 20px;
+
+}
+.imagg{
+    height: 150px;
+    width: 150px;
+    border-radius: 12px;
+    float: left;
+}
+.dr-img{
+    border: 2px solid green;
+    border-radius: 12px;
+    width: 100%;
+    float: left;
+    background-color: white;
+    height: 250px;
+    position: fixed;
+}
+.advinfo{
+    
+    border: 2px solid wheat;
+    border-radius: 12px;
+    height: 150px;
+    width: 150px;
+    float: right;
+    margin: 50px;
+}

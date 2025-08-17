@@ -1,0 +1,53 @@
+
+
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+.alert{
+  background-color: rgba(248, 5, 5, 0.418);
+  color: #fff;
+  height: 45px;
+  width: 100%;
+  font-size: 40;
+}
+.bord{
+  border: 2px solid #fff;
+  width:350px ;
+  border-radius: 12px;
+  padding-left: 15px;
+  background-color: #fff;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-right: 10px;
+}
+.tabl{
+  background-color: #fff;
+}
+.session a {
+  border: 2px solid #fff;
+  background-color: rgba(37, 15, 99, 0.868);
+  border-radius: 12px;
+  height: 50px;
+  width: 150px;
+  margin-left: 100px;
+  color: wheat;
+  font: 2em sans-serif;
+  padding-left:10px ;
+}
+.session :hover{
+  background-color: rgb(29, 12, 83);
+}

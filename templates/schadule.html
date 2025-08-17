@@ -1,0 +1,81 @@
+{%include 'mainn.html'%}
+
+{% block body%}
+<style>
+    .box{
+        border: 1px solid green;
+        margin: 30px;
+        height: max-content;
+        width: max-content;
+    }
+    .s1{
+        font-size: 1.4em;
+        width: max-content;
+        height: max-content;
+        border: 1px solid red;
+        position: absolute;
+        padding-right: 10px;
+        margin-right:10px ;
+}
+.s2{
+    margin: 0px 450px;
+    border: 1px solid rgb(0, 0, 0);
+}
+</style>
+<table>
+    <h1> your     schedual</h1>
+      <tr>
+        <th>Saturday</th>
+        <th> Sunday </th>
+        <th>Monday</th>
+        <th>Tuesday</th>
+        <th>wednesday</th>       
+        <th>thursday</th>       
+        <th>friday</th>       
+      </tr>
+      {%for stussername in stssusername%}
+
+      <tr>
+        <th>{{stussername.saturday}}<br> <a href="/dr/schadule/update" class="mx-1">edit</a></th>
+        <th>{{stussername.sunday}}<br><a href="/dr/schadule/update" class="mx-1">edit</a></th>
+        <th>{{stussername.monday}}<br><a href="/dr/schadule/update" class="mx-1">edit</a></th>
+        <th>{{stussername.tuesday}}<br><a href="/dr/schadule/update" class="mx-1">edit</a></th>
+        <th>{{stussername.wednesday}}<br><a href="/dr/schadule/update" class="mx-1">edit</a></th>
+        <th>{{stussername.thursday}}<br><a href="/dr/schadule/update" class="mx-1">edit</a></th>
+        <th>{{stussername.friday}}<br><a href="/dr/schadule/update" class="mx-1">edit</a></th>
+      </tr>
+      {%endfor%}
+
+    </table> <br>
+
+<form action="/register/schedual" method="post" >
+    <hr>
+
+      <div class="box">
+    <div class="s1">
+        <label > Saturday :&nbsp;</label>
+        <input type="text" name="saturday" required > <br><br>
+        <label > Sunday :&nbsp;&nbsp;&nbsp;&nbsp;</label>
+        <input type="text" name="sunday"  required> <br><br>
+        <label > Monday :&nbsp;</label>
+        <input type="text" name="monday"  required> 
+    </div>
+
+
+
+
+    <div class="s1 s2">
+        <label > Tuesday  :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+        <input type="text" name="tuesday"  required><br><br>
+        <label > wednesday :&nbsp;</label>
+        <input type="text" name="wednesday"  required> <br> <br>
+        <label > thursday :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+        <input type="text" name="thursday"  required>  <br> <br>    
+        <label > friday :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>      
+        <input type="text" name="friday"  required><br>
+        <button type="submit" class="registerbtn">Register</button>
+
+    </div></div>
+ 
+</form>
+{%endblock%}

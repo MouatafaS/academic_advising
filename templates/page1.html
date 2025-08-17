@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحة التسجيل</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            text-align: center; 
+            padding-top: 50px; 
+            background-color: #f0f2f5; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 { color: #42b72a; }
+        p { color: #606770; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>أنت الآن نشط ✅</h1>
+        <p>سيتم عرض الـ IP الخاص بك في صفحة 2.</p>
+    </div>
+
+    <!-- 1. استيراد مكتبة Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        // 2. الاتصال بالخادم
+        const socket = io();
+
+        // 3. عند نجاح الاتصال، قم بتسجيل نفسك
+        socket.on('connect', () => {
+            console.log('Connected to server!');
+            // إرسال حدث للخادم لإعلامه أنك في صفحة 1
+            socket.emit('register_on_page1');
+        });
+    </script>
+</body>
+</html>

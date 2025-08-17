@@ -1,0 +1,192 @@
+{% extends 'mainn.html' %}
+
+{% block body %}
+<style>
+    /* --- Styles for Chat Widget (نفس الأكواد من صفحة المرشد) --- */
+    .chat-launcher-container { position: fixed; bottom: 25px; right: 25px; z-index: 1050; }
+    #chat-launcher-button { background-color: #0d6efd; color: white; width: 60px; height: 60px; border-radius: 50%; border: none; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s ease-in-out, background-color 0.2s; }
+    #chat-launcher-button:hover { transform: scale(1.1); }
+    #chat-launcher-button .icon-open { display: block; }
+    #chat-launcher-button .icon-close { display: none; }
+    .chat-widget { position: absolute; bottom: 80px; right: 0; width: 370px; max-width: calc(100vw - 40px); height: 70vh; max-height: 550px; background-color: #fff; border-radius: 15px; box-shadow: 0 5px 40px rgba(0,0,0,.15); display: flex; flex-direction: column; overflow: hidden; transform: translateY(20px); opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; }
+    .chat-widget.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .chat-widget.open + #chat-launcher-button { background-color: #dc3545; }
+    .chat-widget.open + #chat-launcher-button .icon-open { display: none; }
+    .chat-widget.open + #chat-launcher-button .icon-close { display: block; }
+    .chat-widget-header { background-image: linear-gradient(to right, #0d6efd, #0d62da); color: white; padding: 0.75rem 1rem; flex-shrink: 0; }
+    .chat-widget-header h5 { margin: 0; font-size: 1rem; }
+    .chat-widget-body { flex-grow: 1; overflow-y: auto; background-color: #f8f9fa; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+    .chat-widget-footer { padding: 0.75rem; border-top: 1px solid #dee2e6; flex-shrink: 0; }
+    #messageInput:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
+    .message-bubble { padding: .75rem 1.25rem; border-radius: 20px; max-width: 80%; word-wrap: break-word; line-height: 1.5; }
+    .message-meta { font-size: .75rem; color: #6c757d; margin-top: .25rem; }
+    .received { background-color: #e9ecef; color: #343a40; border-bottom-left-radius: 5px; align-self: flex-start; }
+    .sent { background-color: #0d6efd; color: white; border-bottom-right-radius: 5px; align-self: end; }
+    .sent .message-meta { color: rgba(255,255,255,.8); }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="bi bi-pencil-square me-2"></i> إنشاء تذكرة دعم جديدة</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('student_bp.student_tickets') }}">
+                        {{ form.hidden_tag() }} <div class="mb-3">
+                            <label for="subject" class="form-label">الموضوع</label>
+                            {{ form.subject(class="form-control", id="subject") }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">الرسالة الأولى</label>
+                            {{ form.message(class="form-control", id="message", rows="4") }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">إرسال التذكرة</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <h4><i class="bi bi-ticket-detailed me-2"></i> تذاكرك الحالية</h4>
+            <div class="list-group">
+                {% if student_tickets %}
+                    {% for ticket in student_tickets %}
+                    <div class="list-group-item list-group-item-action flex-column align-items-start">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ ticket.subject }}</h5>
+                            <small>{{ ticket.created_at.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span>
+                                {% if ticket.status == 'new' %}
+                                    <span class="badge bg-primary">جديدة</span>
+                                {% elif ticket.status == 'open' %}
+                                    <span class="badge bg-success">قيد المتابعة</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">مغلقة</span>
+                                {% endif %}
+                            </span>
+                            <button class="btn btn-sm btn-outline-primary open-chat-btn" data-ticket-id="{{ ticket.id }}">
+                                <i class="bi bi-chat-dots me-1"></i> فتح المحادثة
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center text-muted mt-3">ليس لديك أي تذاكر حتى الآن.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="chat-launcher-container">
+    <div class="chat-widget" id="chatWidget">
+        <div class="chat-widget-header"><h5 id="chatWidgetTitle">المحادثة</h5></div>
+        <div class="chat-widget-body" id="chatWidgetBody"></div>
+        <div class="chat-widget-footer">
+            <form id="chatReplyForm">
+                <div class="input-group">
+                    <input type="text" id="messageInput" class="form-control" placeholder="اكتب رسالتك..." required autocomplete="off">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-send-fill"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <button id="chat-launcher-button" aria-label="Open Chat">
+        <i class="bi bi-chat-dots-fill fs-4 icon-open"></i>
+        <i class="bi bi-x-lg fs-4 icon-close"></i>
+    </button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- Elements ---
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const launcherButton = document.getElementById('chat-launcher-button');
+    const chatWidget = document.getElementById('chatWidget');
+    const chatWidgetTitle = document.getElementById('chatWidgetTitle');
+    const chatWidgetBody = document.getElementById('chatWidgetBody');
+    const replyForm = document.getElementById('chatReplyForm');
+    const messageInput = document.getElementById('messageInput');
+    let currentTicketId = null;
+
+    // --- Event Listeners ---
+    launcherButton.addEventListener('click', () => {
+        chatWidget.classList.toggle('open');
+    });
+
+    document.querySelectorAll('.open-chat-btn').forEach(button => {
+        button.addEventListener('click', function (e) {
+            const ticketId = e.currentTarget.dataset.ticketId;
+            currentTicketId = ticketId;
+            fetchTicketDataAndOpenWidget(ticketId);
+        });
+    });
+
+    replyForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const content = messageInput.value.trim();
+        if (!content || !currentTicketId) return;
+        sendMessage(content);
+    });
+
+    // --- Click Outside to Close Logic ---
+    document.addEventListener('click', function(event) {
+        if (!chatWidget.contains(event.target) && !launcherButton.contains(event.target) && !event.target.closest('.open-chat-btn')) {
+            chatWidget.classList.remove('open');
+        }
+    });
+
+    // --- Functions ---
+    function fetchTicketDataAndOpenWidget(ticketId) {
+        fetch(`/student/ticket/${ticketId}/data`)
+            .then(response => response.json())
+            .then(data => {
+                chatWidgetTitle.textContent = data.ticket.subject;
+                chatWidgetBody.innerHTML = '';
+                data.messages.forEach(msg => {
+                    // هنا الفرق: رسالة الطالب هي 'sent' ورسالة الدكتور هي 'received'
+                    appendMessage(msg.content, msg.sender_role === 'student' ? 'sent' : 'received', msg.timestamp);
+                });
+                chatWidget.classList.add('open');
+                scrollToBottom();
+            }).catch(err => console.error("Fetch Error:", err));
+    }
+
+    function sendMessage(content) {
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        appendMessage(content, 'sent', now);
+        messageInput.value = '';
+        scrollToBottom();
+
+        fetch(`/student/ticket/${currentTicketId}/reply`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+            body: `message_content=${encodeURIComponent(content)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert('فشل إرسال الرسالة.');
+            }
+        }).catch(err => console.error("Send Error:", err));
+    }
+
+    function appendMessage(content, type, time) {
+        // ... (هذه الدالة تبقى كما هي بدون تغيير)
+        const bubble = document.createElement('div');
+        bubble.className = `message-bubble ${type}`;
+        bubble.innerHTML = `<p style="margin-bottom: 0;">${content}</p><div class="message-meta" style="text-align:${type === 'sent' ? 'right' : 'left'};">${time}</div>`;
+        chatWidgetBody.appendChild(bubble);
+    }
+
+    function scrollToBottom() {
+        chatWidgetBody.scrollTop = chatWidgetBody.scrollHeight;
+    }
+});
+</script>
+{% endblock %}

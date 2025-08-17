@@ -1,0 +1,56 @@
+
+<style>
+    .box{
+        border: 1px solid green;
+        margin: 30px;
+        height: max-content;
+        width: max-content;
+    }
+    .s1{
+        font-size: 1.4em;
+        width: max-content;
+        height: max-content;
+        border: 1px solid red;
+        position: absolute;
+        padding-right: 10px;
+        margin-right:10px ;
+}
+.s2{
+    margin: 0px 450px;
+    border: 1px solid rgb(0, 0, 0);
+}
+</style>
+<form action="/dr/schadule/update" method="post">
+
+ 
+
+    
+    <hr>
+
+      <div class="box">
+    <div class="s1">
+        <label > Saturday :&nbsp;</label>
+        <textarea type="text" name="saturday"  required>{{saturday}}</textarea> <br><br>
+        <label > Sunday :&nbsp;&nbsp;&nbsp;&nbsp;</label>
+        <textarea type="text" name="sunday"   required>{{sunday}}</textarea> <br><br>
+        <label > Monday :&nbsp;</label>
+        <textarea type="text" name="monday"  required>{{monday}}</textarea> 
+    </div>
+
+
+
+
+    <div class="s1 s2">
+        <label > Tuesday  :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+        <textarea type="text" name="tuesday"  required>{{tuesday}}</textarea><br><br>
+        <label > wednesday :&nbsp;</label>
+        <textarea type="text" name="wednesday"   required>{{wednesday}}</textarea> <br> <br>
+        <label > thursday :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+        <textarea type="text" name="thursday"   required>{{thursday}}</textarea>  <br> <br>    
+        <label > friday :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>      
+        <textarea type="text" name="friday"  required>{{friday}}</textarea><br>
+        <button type="submit" class="registerbtn">Register</button>
+
+    </div></div>
+ 
+</form>

@@ -1,0 +1,409 @@
+{% extends 'mainn.html' %}
+
+{% block body %}
+<style>
+    /* --- Styles for Kanban Board --- */
+    .kanban-board { display: flex; gap: 1.5rem; padding: 1rem; overflow-x: auto; min-height: 80vh; }
+    .kanban-column { flex: 1; min-width: 300px; background-color: #f4f7f9; border-radius: 12px; padding: 1rem; }
+    .column-title { display: flex; align-items: center; padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 2px solid #e9ecef; font-size: 1rem; font-weight: 700; color: #343a40; }
+    .kanban-card { background-color: #fff; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,.05); border-left: 5px solid; transition: transform .2s ease, box-shadow .2s ease; cursor: grab; }
+    .kanban-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,.08); }
+    .kanban-card.dragging { opacity: 0.5; }
+    .kanban-card.status-new { border-color: #0d6efd; }
+    .kanban-card.status-open { border-color: #198754; }
+    .kanban-card.status-closed { border-color: #6c757d; }
+    .card-student-name { font-weight: 600; margin-bottom: .25rem; }
+    .card-subject { font-size: .9rem; color: #6c757d; margin-bottom: 1rem; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; font-size: .8rem; color: #adb5bd; }
+
+    /* --- CSS for Modern Chat Launcher & Widget --- */
+    .chat-launcher-container {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        z-index: 1050;
+    }
+
+    #chat-launcher-button {
+        background-color: #0d6efd;
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out, background-color 0.2s;
+    }
+    #chat-launcher-button:hover {
+        transform: scale(1.1);
+    }
+    #chat-launcher-button .icon-open { display: block; }
+    #chat-launcher-button .icon-close { display: none; }
+
+    .chat-widget {
+        position: absolute;
+        bottom: 80px;
+        right: 0;
+        width: 370px;
+        max-width: calc(100vw - 40px);
+        height: 70vh;
+        max-height: 550px;
+        background-color: #fff;
+        border-radius: 15px;
+        box-shadow: 0 5px 40px rgba(0,0,0,.15);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transform: translateY(20px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    }
+
+    .chat-widget.open {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .chat-widget.open + #chat-launcher-button {
+        background-color: #dc3545;
+    }
+    .chat-widget.open + #chat-launcher-button .icon-open { display: none; }
+    .chat-widget.open + #chat-launcher-button .icon-close { display: block; }
+
+    .chat-widget-header {
+        background-image: linear-gradient(to right, #0d6efd, #0d62da);
+        color: white;
+        padding: 0.75rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    .chat-widget-header h5 { margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .chat-widget-body {
+        flex-grow: 1;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: .75rem;
+    }
+    .chat-widget-body::-webkit-scrollbar { width: 6px; }
+    .chat-widget-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+    .chat-widget-body::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+    .chat-widget-footer {
+        padding: 0.75rem;
+        border-top: 1px solid #dee2e6;
+        flex-shrink: 0;
+    }
+    #messageInput:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    #messageInput:disabled {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+    
+    .message-bubble { padding: .75rem 1.25rem; border-radius: 20px; max-width: 80%; word-wrap: break-word; line-height: 1.5; }
+    .message-meta { font-size: .75rem; color: #6c757d; margin-top: .25rem; }
+    .received { background-color: #e9ecef; color: #343a40; border-bottom-left-radius: 5px; align-self: flex-start; }
+    .sent { background-color: #0d6efd; color: white; border-bottom-right-radius: 5px; align-self: end; }
+    .sent .message-meta { color: rgba(255,255,255,.8); }
+    .message-meta .read-receipt {
+        font-style: italic;
+        color: #3498db;
+        margin-left: 5px;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="kanban-board">
+        <div class="kanban-column" data-status="new">
+            <div class="column-title"><i class="bi bi-inbox-fill me-2 text-primary"></i> تذاكر جديدة <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill">{{ new_tickets|length }}</span></div>
+            {% for ticket in new_tickets %}
+            <div class="kanban-card status-new" draggable="true" data-ticket-id="{{ ticket.id }}">
+                <div class="card-student-name d-flex justify-content-between align-items-center">
+                    <span>{{ ticket.requesting_student.name }}</span>
+                    {% if ticket.unread_messages > 0 %}
+                        <span class="badge bg-danger rounded-pill">{{ ticket.unread_messages }}</span>
+                    {% endif %}
+                </div>
+                <p class="card-subject">{{ ticket.subject }}</p>
+                <div class="card-footer"><span>{{ ticket.created_at.strftime('%Y-%m-%d') }}</span><button class="btn btn-sm btn-outline-primary open-chat-btn">فتح</button></div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="kanban-column" data-status="open">
+            <div class="column-title"><i class="bi bi-chat-dots-fill me-2 text-success"></i> قيد المتابعة <span class="badge bg-success-subtle text-success-emphasis rounded-pill">{{ open_tickets|length }}</span></div>
+            {% for ticket in open_tickets %}
+            <div class="kanban-card status-open" draggable="true" data-ticket-id="{{ ticket.id }}">
+                <div class="card-student-name d-flex justify-content-between align-items-center">
+                    <span>{{ ticket.requesting_student.name }}</span>
+                    {% if ticket.unread_messages > 0 %}
+                        <span class="badge bg-danger rounded-pill">{{ ticket.unread_messages }}</span>
+                    {% endif %}
+                </div>
+                <p class="card-subject">{{ ticket.subject }}</p>
+                <div class="card-footer"><span>{{ ticket.created_at.strftime('%Y-%m-%d') }}</span><button class="btn btn-sm btn-outline-success open-chat-btn">عرض المحادثة</button></div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="kanban-column" data-status="closed">
+            <div class="column-title"><i class="bi bi-check-circle-fill me-2 text-secondary"></i> مغلقة <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill">{{ closed_tickets|length }}</span></div>
+            {% for ticket in closed_tickets %}
+            <div class="kanban-card status-closed" draggable="true" data-ticket-id="{{ ticket.id }}">
+                 <div class="card-student-name d-flex justify-content-between align-items-center">
+                    <span>{{ ticket.requesting_student.name }}</span>
+                    {% if ticket.unread_messages > 0 %}
+                        <span class="badge bg-danger rounded-pill">{{ ticket.unread_messages }}</span>
+                    {% endif %}
+                </div>
+                <p class="card-subject">{{ ticket.subject }}</p>
+                <div class="card-footer"><span>{{ ticket.created_at.strftime('%Y-%m-%d') }}</span><button class="btn btn-sm btn-outline-secondary open-chat-btn">مراجعة</button></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="chat-launcher-container">
+    <div class="chat-widget" id="chatWidget">
+        <div class="chat-widget-header">
+            <h5 id="chatWidgetTitle">المحادثة</h5>
+        </div>
+        <div class="chat-widget-body" id="chatWidgetBody">
+            </div>
+        <div class="chat-widget-footer">
+            <form id="chatReplyForm">
+                <div class="input-group">
+                    <input type="text" id="messageInput" class="form-control" placeholder="اكتب رسالتك..." required autocomplete="off">
+                    <button class="btn btn-primary" type="submit" id="sendButton"><i class="bi bi-send-fill"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <button id="chat-launcher-button" aria-label="Open Chat">
+        <i class="bi bi-chat-dots-fill fs-4 icon-open"></i>
+        <i class="bi bi-x-lg fs-4 icon-close"></i>
+    </button>
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const socket = io();
+    let currentTicketId = null;
+
+    socket.on('new_message', function(data) {
+        const card = document.querySelector(`.kanban-card[data-ticket-id='${data.ticket_id}']`);
+        if (card && data.sender_role === 'student') {
+            let badge = card.querySelector('.badge.bg-danger');
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'badge bg-danger rounded-pill';
+                card.querySelector('.card-student-name').appendChild(badge);
+            }
+            badge.textContent = (parseInt(badge.textContent) || 0) + 1;
+            badge.style.display = 'inline-block';
+        }
+        
+        if (data.ticket_id == currentTicketId && data.sender_role !== 'doctor') {
+            appendMessage(data.content, 'received', data.timestamp);
+            scrollToBottom();
+            markAsRead(currentTicketId);
+        }
+    });
+
+    socket.on('messages_read', function(data) {
+        if (data.ticket_id == currentTicketId && data.reader_role === 'student') {
+            document.querySelectorAll('.message-bubble.sent .read-receipt').forEach(receipt => {
+                receipt.textContent = '✓ مقروءة';
+            });
+        }
+    });
+
+    const launcherButton = document.getElementById('chat-launcher-button');
+    const chatWidget = document.getElementById('chatWidget');
+    const chatWidgetTitle = document.getElementById('chatWidgetTitle');
+    const chatWidgetBody = document.getElementById('chatWidgetBody');
+    const replyForm = document.getElementById('chatReplyForm');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    
+    launcherButton.addEventListener('click', () => chatWidget.classList.toggle('open'));
+
+    document.querySelectorAll('.open-chat-btn').forEach(button => {
+        button.addEventListener('click', function (e) {
+            const card = e.target.closest('.kanban-card');
+            currentTicketId = card.dataset.ticketId;
+            fetchTicketDataAndOpenWidget(currentTicketId);
+        });
+    });
+
+    replyForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const content = messageInput.value.trim();
+        if (!content || !currentTicketId) return;
+        sendMessage(content);
+    });
+
+    document.addEventListener('click', function(event) {
+        const isClickInsideWidget = chatWidget.contains(event.target);
+        const isClickOnLauncher = launcherButton.contains(event.target);
+        const isClickOnOpenBtn = event.target.closest('.open-chat-btn');
+        if (chatWidget.classList.contains('open') && !isClickInsideWidget && !isClickOnLauncher && !isClickOnOpenBtn) {
+            chatWidget.classList.remove('open');
+        }
+    });
+    
+    function fetchTicketDataAndOpenWidget(ticketId) {
+        markAsRead(ticketId);
+        fetch(`/ticket/${ticketId}/data`)
+            .then(response => response.json())
+            .then(data => {
+                chatWidgetTitle.textContent = data.ticket.subject;
+                chatWidgetBody.innerHTML = '';
+                data.messages.forEach(msg => {
+                    let readStatus = null;
+                    if (msg.sender_role === 'doctor') {
+                        readStatus = msg.is_read ? '✓ مقروءة' : '✓ مرسلة';
+                    }
+                    appendMessage(msg.content, msg.sender_role === 'doctor' ? 'sent' : 'received', msg.timestamp, readStatus);
+                });
+                if (data.ticket.status === 'Closed') {
+                    messageInput.disabled = true;
+                    sendButton.disabled = true;
+                    messageInput.placeholder = "هذه المحادثة مغلقة.";
+                } else {
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    messageInput.placeholder = "اكتب رسالتك...";
+                }
+                chatWidget.classList.add('open');
+                scrollToBottom();
+            }).catch(err => console.error("Fetch Error:", err));
+    }
+    
+    function sendMessage(content) {
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        appendMessage(content, 'sent', now, '✓ مرسلة');
+        messageInput.value = '';
+        scrollToBottom();
+        fetch(`/ticket/${currentTicketId}/reply`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `message_content=${encodeURIComponent(content)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || 'فشل إرسال الرسالة.');
+            }
+        }).catch(err => console.error("Send Error:", err));
+    }
+    
+    function appendMessage(content, type, time, readStatus = null) {
+        const bubble = document.createElement('div');
+        bubble.className = `message-bubble ${type}`;
+        const p = document.createElement('p');
+        p.style.marginBottom = '0';
+        p.appendChild(document.createTextNode(content));
+        bubble.appendChild(p);
+        
+        const meta = document.createElement('div');
+        meta.className = 'message-meta';
+        meta.style.textAlign = type === 'sent' ? 'right' : 'left';
+        
+        const timeSpan = document.createElement('span');
+        timeSpan.textContent = time;
+        meta.appendChild(timeSpan);
+
+        if (type === 'sent' && readStatus) {
+            const receipt = document.createElement('span');
+            receipt.className = 'read-receipt';
+            receipt.textContent = readStatus;
+            meta.appendChild(receipt);
+        }
+        
+        bubble.appendChild(meta);
+        chatWidgetBody.appendChild(bubble);
+    }
+
+    function markAsRead(ticketId) {
+        fetch(`/ticket/${ticketId}/mark-as-read`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    const card = document.querySelector(`.kanban-card[data-ticket-id='${ticketId}']`);
+                    if (card) {
+                        const badge = card.querySelector('.badge.bg-danger');
+                        if (badge) {
+                            badge.style.display = 'none';
+                        }
+                    }
+                }
+            });
+    }
+
+    function scrollToBottom() {
+        chatWidgetBody.scrollTop = chatWidgetBody.scrollHeight;
+    }
+    
+    const cards = document.querySelectorAll('.kanban-card');
+    const columns = document.querySelectorAll('.kanban-column');
+    cards.forEach(card => {
+        card.addEventListener('dragstart', () => card.classList.add('dragging'));
+        card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    });
+    columns.forEach(column => {
+        column.addEventListener('dragover', e => {
+            e.preventDefault();
+            const draggingCard = document.querySelector('.dragging');
+            column.appendChild(draggingCard);
+        });
+        column.addEventListener('drop', e => {
+            e.preventDefault();
+            const draggingCard = document.querySelector('.dragging');
+            if (draggingCard) {
+                const ticketId = draggingCard.dataset.ticketId;
+                const newStatus = column.dataset.status;
+                updateTicketStatus(ticketId, newStatus);
+            }
+        });
+    });
+
+    function updateTicketStatus(ticketId, newStatus) {
+        const formattedStatus = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+        fetch('/ticket/update-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticket_id: ticketId, new_status: formattedStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Status updated successfully');
+                const card = document.querySelector(`.kanban-card[data-ticket-id='${ticketId}']`);
+                if(card){
+                    card.className = 'kanban-card';
+                    card.classList.add(`status-${newStatus}`);
+                }
+            } else {
+                console.error('Failed to update status:', data.message);
+            }
+        }).catch(err => console.error("Update Status Fetch Error:", err));
+    }
+});
+</script>
+{% endblock %}

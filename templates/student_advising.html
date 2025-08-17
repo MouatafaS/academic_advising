@@ -1,0 +1,573 @@
+{% extends 'mainn.html' %}
+
+{% block body %}
+<style>
+    /* ============================================
+    =      ENHANCED AESTHETIC STYLESHEET       =
+    ============================================
+    */
+
+    /* --- 1. Design System & Variables --- */
+    :root {
+        --primary-color: #4A90E2; /* A more modern, softer blue */
+        --primary-hover: #357ABD;
+        --primary-light: #EAF2FB;
+        --text-dark: #2c3e50;    /* A dark slate gray, easier on the eyes than pure black */
+        --text-light: #95a5a6;   /* A lighter gray for meta text */
+        --border-color: #ecf0f1; /* A very light, subtle border color */
+        --background-main: #ffffff;
+        --background-secondary: #f7f9fa; /* For hovers and chat body */
+        --border-radius: 8px; /* Consistent border radius */
+        --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.06);
+        --shadow-focus: 0 0 0 3px rgba(74, 144, 226, 0.25);
+    }
+
+    /* --- 2. Main Layout --- */
+    .dashboard-container {
+        display: flex;
+        height: calc(100vh - 70px); /* Adjust 70px to your actual navbar height */
+        background-color: var(--background-main);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* --- 3. Left Panel: Ticket List --- */
+    .ticket-panel {
+        width: 380px;
+        flex-shrink: 0;
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ticket-panel-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    /* Primary Call to Action Button */
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border-radius: var(--border-radius);
+        transition: all 0.2s ease-in-out;
+    }
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+        border-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-soft);
+    }
+     .btn-primary:focus {
+        box-shadow: var(--shadow-focus);
+    }
+
+    /* Tab Navigation */
+    .ticket-tabs {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .ticket-tabs .nav-link {
+        color: var(--text-light);
+        font-weight: 600;
+        border-radius: var(--border-radius);
+    }
+    .ticket-tabs .nav-link.active {
+        color: var(--primary-color);
+        background-color: var(--primary-light) !important;
+    }
+
+    /* Ticket List Styling */
+    .ticket-list {
+        overflow-y: auto;
+        padding: 0.75rem;
+    }
+
+    .ticket-list-item {
+        padding: 1rem 1.25rem;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        margin-bottom: 0.5rem;
+        transition: background-color 0.2s ease;
+    }
+    .ticket-list-item:hover {
+        background-color: var(--background-secondary);
+    }
+    .ticket-list-item.active {
+        background-color: var(--primary-light);
+        box-shadow: inset 3px 0 0 0 var(--primary-color); /* A subtle left border indicator */
+    }
+
+    .ticket-subject {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+    }
+    .ticket-meta {
+        font-size: 0.85rem;
+        color: var(--text-light);
+    }
+    .status-badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25em 0.7em;
+        border-radius: 20px;
+    }
+    .status-new { background-color: #cfe2ff; color: #084298; }
+    .status-Opened { background-color: #d1e7dd; color: #0f5132; }
+    .status-Closed { background-color: #e2e3e5; color: #41464b; }
+
+
+    /* --- 4. Right Panel: Chat Area --- */
+    .chat-panel {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #chatPlaceholder {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        color: var(--text-light);
+        text-align: center;
+    }
+    #chatPlaceholder i { font-size: 4rem; margin-bottom: 1rem; color: var(--border-color); }
+    #chatPlaceholder h5 { color: var(--text-dark); }
+
+    #chatView {
+        display: none;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .chat-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+    #chatSubject {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .chat-body {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        background-color: var(--background-secondary);
+    }
+    .messages-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem; /* Increased gap */
+    }
+    .message-bubble {
+        padding: 0.8rem 1.25rem;
+        border-radius: 18px;
+        max-width: 75%;
+        line-height: 1.6;
+    }
+    .received {
+        background-color: var(--background-main);
+        border: 1px solid var(--border-color);
+        color: var(--text-dark);
+        border-bottom-left-radius: 5px;
+        align-self: flex-start;
+    }
+    .sent {
+        background-color: var(--primary-color);
+        color: white;
+        border-bottom-right-radius: 5px;
+        align-self: flex-end;
+    }
+    .message-meta {
+        font-size: 0.75rem;
+        color: var(--text-light);
+        margin-top: 0.3rem;
+    }
+    .sent .message-meta { color: rgba(255, 255, 255, 0.8); }
+
+    .chat-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        background-color: #fff;
+    }
+    .chat-footer .form-control {
+        border-radius: var(--border-radius);
+        padding: 0.75rem 1rem;
+        border-color: var(--border-color);
+    }
+    .chat-footer .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: var(--shadow-focus);
+    }
+    #messageInput:disabled {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+
+    /* --- 5. Modal Styling --- */
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .modal-header {
+        border-bottom-color: var(--border-color);
+    }
+     .modal-footer {
+        border-top-color: var(--border-color);
+    }
+
+
+    /* --- 6. Mobile Responsiveness --- */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            flex-direction: column;
+            height: auto;
+        }
+        .ticket-panel {
+            width: 100%;
+            height: 100vh;
+        }
+        .chat-panel {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            background-color: #fff;
+            z-index: 10;
+        }
+        .chat-panel.active {
+            transform: translateX(0);
+        }
+        #back-to-list-btn {
+            display: inline-block;
+        }
+    }
+    #back-to-list-btn { display: none; }
+    .message-meta .read-receipt {
+        font-style: italic;
+        color: #3498db;
+        margin-left: 5px;
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="ticket-panel" id="ticketPanel">
+        <div class="ticket-panel-header">
+            <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#newTicketModal">
+                <i class="bi bi-plus-lg me-2"></i> تذكرة جديدة
+            </button>
+        </div>
+        
+        <div class="ticket-tabs">
+            <ul class="nav nav-pills nav-fill" id="ticketStatusTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-status-filter="new" type="button">الجديدة</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-status-filter="Opened" type="button">المفتوحة</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-status-filter="Closed" type="button">المغلقة</button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="ticket-list" id="ticketList">
+            {% for ticket in new_tickets %}
+            <div class="ticket-list-item" data-ticket-id="{{ ticket.id }}" data-status="new">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="ticket-subject">{{ ticket.subject }}</div>
+                    {% if ticket.unread_messages > 0 %}
+                        <span class="badge bg-danger rounded-pill">{{ ticket.unread_messages }}</span>
+                    {% else %}
+                        <span class="status-badge status-new">جديد</span>
+                    {% endif %}
+                </div>
+                <div class="ticket-meta">#{{ ticket.id }} &middot; {{ ticket.created_at.strftime('%Y-%m-%d') }}</div>
+            </div>
+            {% endfor %}
+            
+            {% for ticket in Opened_tickets %}
+             <div class="ticket-list-item" data-ticket-id="{{ ticket.id }}" data-status="Opened" style="display: none;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="ticket-subject">{{ ticket.subject }}</div>
+                     {% if ticket.unread_messages > 0 %}
+                        <span class="badge bg-danger rounded-pill">{{ ticket.unread_messages }}</span>
+                    {% else %}
+                        <span class="status-badge status-Opened">مفتوح</span>
+                    {% endif %}
+                </div>
+                <div class="ticket-meta">#{{ ticket.id }} &middot; {{ ticket.created_at.strftime('%Y-%m-%d') }}</div>
+            </div>
+            {% endfor %}
+
+            {% for ticket in Closed_tickets %}
+             <div class="ticket-list-item" data-ticket-id="{{ ticket.id }}" data-status="Closed" style="display: none;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="ticket-subject">{{ ticket.subject }}</div>
+                     {% if ticket.unread_messages > 0 %}
+                        <span class="badge bg-danger rounded-pill">{{ ticket.unread_messages }}</span>
+                    {% else %}
+                        <span class="status-badge status-Closed">مغلق</span>
+                    {% endif %}
+                </div>
+                <div class="ticket-meta">#{{ ticket.id }} &middot; {{ ticket.created_at.strftime('%Y-%m-%d') }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="chat-panel" id="chatPanel">
+        <div id="chatPlaceholder">
+            <i class="bi bi-chat-square-text"></i>
+            <h5>اختر تذكرة من القائمة لعرض المحادثة</h5>
+        </div>
+
+        <div id="chatView">
+            <div class="chat-header d-flex align-items-center">
+                <button class="btn btn-light me-3" id="back-to-list-btn"><i class="bi bi-arrow-right"></i></button>
+                <h5 class="mb-0" id="chatSubject"></h5>
+            </div>
+            <div class="chat-body">
+                <div class="messages-container" id="messagesContainer"></div>
+            </div>
+            <div class="chat-footer">
+                <form id="chatReplyForm">
+                    <div class="input-group">
+                        <input type="text" id="messageInput" class="form-control" placeholder="اكتب ردك هنا..." required autocomplete="off">
+                        <button class="btn btn-primary" type="submit" id="sendButton"><i class="bi bi-send-fill"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="newTicketModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('student.student_advising_get') }}">
+                {{ form.hidden_tag() }}
+                <div class="modal-header">
+                    <h5 class="modal-title">إنشاء تذكرة جديدة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        {{ form.subject.label(class="form-label") }}
+                        {{ form.subject(class="form-control form-control-lg") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.message.label(class="form-label") }}
+                        {{ form.message(class="form-control", rows="6") }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const socket = io();
+    let currentTicketId = null;
+
+    socket.on('new_message', function(data) {
+        const ticketItem = document.querySelector(`.ticket-list-item[data-ticket-id='${data.ticket_id}']`);
+        if (ticketItem && data.sender_role === 'doctor') {
+            let badge = ticketItem.querySelector('.badge.bg-danger');
+            if (!badge) {
+                const statusBadge = ticketItem.querySelector('.status-badge');
+                if(statusBadge) statusBadge.style.display = 'none';
+                badge = document.createElement('span');
+                badge.className = 'badge bg-danger rounded-pill';
+                ticketItem.querySelector('.d-flex').appendChild(badge);
+            }
+            badge.textContent = (parseInt(badge.textContent) || 0) + 1;
+            badge.style.display = 'inline-block';
+        }
+
+        if (data.ticket_id == currentTicketId && data.sender_role !== 'student') {
+            appendMessage(data.content, 'received', data.timestamp);
+            scrollToBottom();
+            markAsRead(currentTicketId);
+        }
+    });
+
+    socket.on('messages_read', function(data) {
+        if (data.ticket_id == currentTicketId && data.reader_role === 'doctor') {
+            document.querySelectorAll('.message-bubble.sent .read-receipt').forEach(receipt => {
+                receipt.textContent = '✓ مقروءة';
+            });
+        }
+    });
+
+    const ticketList = document.getElementById('ticketList');
+    const chatPanel = document.getElementById('chatPanel');
+    const chatPlaceholder = document.getElementById('chatPlaceholder');
+    const chatView = document.getElementById('chatView');
+    const chatSubject = document.getElementById('chatSubject');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const replyForm = document.getElementById('chatReplyForm');
+    const messageInput = document.getElementById('messageInput');
+    const backToListBtn = document.getElementById('back-to-list-btn');
+    const statusTabs = document.querySelectorAll('#ticketStatusTabs .nav-link');
+    const sendButton = document.getElementById('sendButton');
+    
+    statusTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const statusFilter = this.getAttribute('data-status-filter');
+            statusTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            const allTickets = ticketList.querySelectorAll('.ticket-list-item');
+            allTickets.forEach(ticket => {
+                ticket.style.display = (ticket.getAttribute('data-status').toLowerCase() === statusFilter.toLowerCase()) ? 'block' : 'none';
+            });
+        });
+    });
+
+    ticketList.addEventListener('click', function(event) {
+        const ticketItem = event.target.closest('.ticket-list-item');
+        if (!ticketItem) return;
+        const ticketId = ticketItem.dataset.ticketId;
+        ticketList.querySelectorAll('.ticket-list-item').forEach(item => item.classList.remove('active'));
+        ticketItem.classList.add('active');
+        fetchAndDisplayTicket(ticketId);
+        if (window.innerWidth <= 768) {
+            chatPanel.classList.add('active');
+        }
+    });
+
+    backToListBtn.addEventListener('click', () => {
+        chatPanel.classList.remove('active');
+    });
+
+    function fetchAndDisplayTicket(ticketId) {
+        markAsRead(ticketId);
+        currentTicketId = ticketId;
+        chatPlaceholder.style.display = 'none';
+        chatView.style.display = 'flex';
+        messagesContainer.innerHTML = `<p class="text-center text-muted">جارِ تحميل المحادثة...</p>`;
+        
+        fetch(`/student/ticket/${ticketId}/data`)
+            .then(response => response.json())
+            .then(data => {
+                chatSubject.textContent = data.ticket.subject;
+                messagesContainer.innerHTML = '';
+                data.messages.forEach(msg => {
+                    let readStatus = null;
+                    if (msg.sender_role === 'student') {
+                        readStatus = msg.is_read ? '✓ مقروءة' : '✓ مرسلة';
+                    }
+                    appendMessage(msg.content, msg.sender_role === 'student' ? 'sent' : 'received', msg.timestamp, readStatus);
+                });
+
+                if (data.ticket.status === 'Closed') {
+                    messageInput.disabled = true;
+                    sendButton.disabled = true;
+                    messageInput.placeholder = "هذه المحادثة مغلقة.";
+                } else {
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    messageInput.placeholder = "اكتب ردك هنا...";
+                }
+                scrollToBottom();
+            })
+            .catch(error => console.error("Fetch Error:", error));
+    }
+
+    replyForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const content = messageInput.value.trim();
+        if (!content || !currentTicketId) return;
+        const now = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        appendMessage(content, 'sent', now, '✓ مرسلة');
+        const optimisticMessage = messagesContainer.lastChild;
+        messageInput.value = '';
+        scrollToBottom();
+        fetch(`/student/ticket/${currentTicketId}/reply`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `message_content=${encodeURIComponent(content)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success){
+                alert(data.message || 'فشل إرسال الرسالة.');
+                optimisticMessage.style.opacity = '0.5';
+            }
+        }).catch(err => {
+            console.error("Send Error:", err);
+            const meta = optimisticMessage.querySelector('.message-meta');
+            if (meta) meta.textContent += ' (فشل الإرسال)';
+            optimisticMessage.style.opacity = '0.7';
+        });
+    });
+
+    function appendMessage(content, type, time, readStatus = null) {
+        const bubble = document.createElement('div');
+        bubble.className = `message-bubble ${type}`;
+        const text = document.createElement('p');
+        text.style.marginBottom = '0';
+        text.textContent = content;
+        bubble.appendChild(text);
+        
+        const meta = document.createElement('div');
+        meta.className = `message-meta`;
+        meta.style.textAlign = type === 'sent' ? 'right' : 'left';
+        
+        const timeSpan = document.createElement('span');
+        timeSpan.textContent = time;
+        meta.appendChild(timeSpan);
+
+        if (type === 'sent' && readStatus) {
+            const receipt = document.createElement('span');
+            receipt.className = 'read-receipt';
+            receipt.textContent = readStatus;
+            meta.appendChild(receipt);
+        }
+        
+        bubble.appendChild(meta);
+        messagesContainer.appendChild(bubble);
+    }
+
+    function markAsRead(ticketId) {
+        fetch(`/student/ticket/${ticketId}/mark-as-read`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    const ticketItem = document.querySelector(`.ticket-list-item[data-ticket-id='${ticketId}']`);
+                    if (ticketItem) {
+                        const badge = ticketItem.querySelector('.badge.bg-danger');
+                        if (badge) {
+                            badge.style.display = 'none';
+                            const statusBadge = ticketItem.querySelector('.status-badge');
+                            if(statusBadge) statusBadge.style.display = 'inline-block';
+                        }
+                    }
+                }
+            });
+    }
+
+    function scrollToBottom() {
+        const chatBody = document.querySelector('.chat-body');
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+});
+</script>
+{% endblock %}

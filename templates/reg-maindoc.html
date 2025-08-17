@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Register Doctor</title>
+<style>
+  /* --- Global Styles & Fonts --- */
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden; /* Prevent scrolling */
+  }
+
+  /* --- Main Split Screen Container --- */
+  .split-screen-container {
+    display: flex;
+    height: 100vh;
+  }
+
+  /* --- Left Pane (Image and Branding) --- */
+  .left-pane {
+    width: 55%;
+    position: relative;
+    background-image: url("/static/images/images (13).jpeg");
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    padding: 40px;
+  }
+  
+  .left-pane::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(26, 60, 211, 0.5); 
+  }
+
+  .left-pane-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .left-pane h1 {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+  }
+
+  .left-pane p {
+    font-size: 18px;
+    font-weight: 400;
+    max-width: 450px;
+    line-height: 1.6;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  /* --- Right Pane (The Form) --- */
+  .right-pane {
+    width: 45%;
+    background: #f4f7f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+  }
+
+  .form-content {
+    width: 100%;
+    max-width: 400px;
+    /* === التعديل: تم رفع الفورم للأعلى 20 بكسل === */
+    transform: translateY(-20px);
+  }
+
+  .form-content h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 25px;
+    text-align: center;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #555;
+  }
+
+  input[type=text], input[type=password] {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 10px; 
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    transition: all 0.3s;
+    color: #333; /* Default text/dot color */
+  }
+
+  input[type=text]:focus, input[type=password]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+  }
+  
+  input[type=password].is-invalid {
+      color: #dc3545; /* Red color for dots */
+      border-color: #dc3545; /* Make border red as well */
+  }
+
+  .validation-message {
+    font-size: 0.85em;
+    margin-top: -5px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    min-height: 1.2em;
+  }
+  .validation-message.valid { color: #28a745; }
+  .validation-message.invalid { color: #dc3545; }
+
+  .registerbtn {
+    background: #007bff;
+    color: white;
+    padding: 14px 20px;
+    margin-top: 15px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+
+  .registerbtn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+  }
+
+  /* --- Notification System CSS --- */
+  .notification-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; }
+  .notification { display: flex; align-items: center; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); width: 350px; border-left: 5px solid; opacity: 1; transition: opacity 0.5s, transform 0.5s; background-color: #fff; }
+  .notification.success { border-color: #48bb78; }
+  .notification.danger  { border-color: #f56565; }
+  .notification.warning { border-color: #ed8936; }
+  .notification.info    { border-color: #4299e1; }
+  .notification-icon { font-size: 24px; margin-right: 15px; }
+  .notification-content { flex-grow: 1; }
+  .notification-title { font-weight: bold; margin: 0 0 5px 0; color: #333; }
+  .notification-message { margin: 0; color: #555; }
+  .notification[data-role="system"] .notification-icon::before      { content: '⚙️'; }
+  .notification[data-role="system"] .notification-title::before     { content: 'System Alert'; }
+  .notification[data-role="security"] .notification-icon::before    { content: '🛡️'; }
+  .notification[data-role="security"] .notification-title::before   { content: 'Security Alert'; }
+  .notification[data-role="message"] .notification-icon::before     { content: '✉️'; }
+  .notification[data-role="message"] .notification-title::before    { content: 'New Message'; }
+  .notification[data-role="user_action"] .notification-icon::before { content: '👍'; }
+  .notification[data-role="user_action"] .notification-title::before { content: 'Action Confirmed'; }
+  .notification-close-btn { background: none; border: none; font-size: 24px; color: #888; cursor: pointer; padding: 0 0 0 10px; }
+  .notification.hidden { opacity: 0; transform: translateX(120%); }
+</style>
+</head>
+<body>
+  {% include 'mainn.html' %}
+  {% block body %}
+
+<div class="notification-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        {% set msg_data = message|fromjson %}
+        <div class="notification {{ category }}" data-role="{{ msg_data.role }}">
+          <div class="notification-icon"></div>
+          <div class="notification-content">
+            <p class="notification-title"></p>
+            <p class="notification-message">{{ msg_data.message }}</p>
+          </div>
+          <button class="notification-close-btn">&times;</button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<div class="split-screen-container">
+  <div class="left-pane">
+    <div class="left-pane-content">
+      <h1>Academic Advising Portal</h1>
+      <p>Join a community dedicated to academic excellence and seamless communication between students and advisors.</p>
+    </div>
+  </div>
+
+  <div class="right-pane">
+    <div class="form-content">
+      <form action="/register-doc" method="post" id="register-form">
+          <h2>Register New Doctor</h2>
+          <label for="name"><b>Name</b></label>
+          <input type="text" placeholder="Enter Doctor's Full Name" name="name" id="name" required>
+      
+          <label for="username"><b>Username</b></label>
+          <input type="text" placeholder="Enter a unique username" name="username" id="username" autocomplete="off" required>
+      
+          <label for="password"><b>Password</b></label>
+          <input type="password" placeholder="Min. 8 characters" name="password" id="password" required>
+
+          <button type="submit" class="registerbtn">Register Account</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Notification System Logic
+    const notifications = document.querySelectorAll('.notification');
+    notifications.forEach(notification => {
+        const role = notification.dataset.role;
+        const closeButton = notification.querySelector('.notification-close-btn');
+        const closeNotification = () => {
+            notification.classList.add('hidden');
+            setTimeout(() => { if (notification.parentNode) notification.parentNode.removeChild(notification); }, 500);
+        };
+        closeButton.addEventListener('click', closeNotification);
+        if (role !== 'security') {
+            setTimeout(closeNotification, 5000);
+        }
+    });
+
+    // Dynamic Form Validation Logic
+    const passwordInput = document.getElementById('password');
+    const passwordValidationMsg = document.getElementById('password-validation');
+    
+    if (passwordInput) {
+        passwordInput.addEventListener('keyup', () => {
+            if (passwordInput.value.length === 0) {
+                 passwordValidationMsg.textContent = '';
+                 passwordInput.classList.remove('is-invalid');
+            } else if (passwordInput.value.length < 8) {
+                passwordValidationMsg.textContent = 'Password must be at least 8 characters.';
+                passwordValidationMsg.className = 'validation-message invalid';
+                passwordInput.classList.add('is-invalid');
+            } else {
+                passwordValidationMsg.textContent = 'Password strength is sufficient.';
+                passwordValidationMsg.className = 'validation-message valid';
+                passwordInput.classList.remove('is-invalid');
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}
+</body>
+</html>

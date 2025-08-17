@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Add padding to containers */
+.container {
+  padding: 10px;
+  background-color: white;
+}
+
+/* Full-width input fields */
+input[type=text], input[type=password] {
+  width: 100%;
+  padding: 15px;
+  margin: 5px 0 22px 0;
+  display: inline-block;
+  border: none;
+  background: #f1f1f1;
+}
+
+input[type=text]:focus, input[type=password]:focus {
+  background-color: #ddd;
+  outline: none;
+}
+
+/* Overwrite default styles of hr */
+hr {
+  border: 1px solid #f1f1f1;
+  margin-bottom: 25px;
+}
+
+/* Set a style for the submit button */
+.registerbtn {
+  background-color: #272727;
+  color: white;
+  padding: 16px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  opacity: 0.9;
+}
+
+.registerbtn:hover {
+  opacity: 1;
+}
+
+.imagegiff{
+  height: 80px;
+}
+.imagg{
+  height: 80px;
+  width: 100%;
+}
+</style>
+</head>
+<body>
+  {%include 'mainn.html'%}
+
+  {% block body%}
+</div></header> 
+
+<style>
+  .notification-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .notification {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 350px;
+    border-left: 5px solid;
+    opacity: 1;
+    transition: opacity 0.5s, transform 0.5s;
+    background-color: #fff;
+  }
+  .notification.success { border-color: #48bb78; }
+  .notification.danger  { border-color: #f56565; }
+  .notification.warning { border-color: #ed8936; }
+  .notification.info    { border-color: #4299e1; }
+  
+  .notification-icon { font-size: 24px; margin-right: 15px; }
+  .notification-content { flex-grow: 1; }
+  .notification-title { font-weight: bold; margin: 0 0 5px 0; color: #333; }
+  .notification-message { margin: 0; color: #555; }
+  
+  .notification[data-role="system"] .notification-icon::before      { content: '⚙️'; }
+  .notification[data-role="system"] .notification-title::before     { content: 'System Alert'; }
+  .notification[data-role="security"] .notification-icon::before    { content: '🛡️'; }
+  .notification[data-role="security"] .notification-title::before   { content: 'Security Alert'; }
+  .notification[data-role="message"] .notification-icon::before     { content: '✉️'; }
+  .notification[data-role="message"] .notification-title::before    { content: 'New Message'; }
+  .notification[data-role="user_action"] .notification-icon::before { content: '👍'; }
+  .notification[data-role="user_action"] .notification-title::before { content: 'Action Confirmed'; }
+  
+  .notification-close-btn { background: none; border: none; font-size: 24px; color: #888; cursor: pointer; padding: 0 0 0 10px; }
+  .notification.hidden { opacity: 0; transform: translateX(120%); }
+</style>
+
+<div class="notification-container">
+  {# Reminder: This code depends on the 'fromjson' filter in your main app.py file #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        {% set msg_data = message|fromjson %}
+        <div class="notification {{ category }}" data-role="{{ msg_data.role }}">
+          <div class="notification-icon"></div>
+          <div class="notification-content">
+            <p class="notification-title"></p>
+            <p class="notification-message">{{ msg_data.message }}</p>
+          </div>
+          <button class="notification-close-btn">&times;</button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<section class="u-align-left u-clearfix u-image u-section-1" id="sec-44f4" data-image-width="1919" data-image-height="1080">
+  <div class="u-clearfix u-sheet u-sheet-1">
+    <div class="u-expanded-width-xs u-preserve-proportions u-shape u-shape-circle u-white u-shape-1">
+    </div>
+    <div class="u-align-center u-container-style u-group u-shape-rectangle u-group-1">
+        <form action="/login" method="post">
+          <div class="container">
+            <hr>
+            <h1>LOGIN AS DOCTOR</h1>
+            <label for="email"><b>USER Name</b></label>
+            <input type="text" placeholder="Enter Your Name" name="username" required>
+        
+            <label for="psw-repeat"><b> Password</b></label>
+            <input type="password" placeholder=" Password" name="password"  required>
+            <hr>
+        
+            <button type="submit" class="registerbtn">LOGIN</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const notifications = document.querySelectorAll('.notification');
+    notifications.forEach(notification => {
+      const role = notification.dataset.role;
+      const closeButton = notification.querySelector('.notification-close-btn');
+      const closeNotification = () => {
+        notification.classList.add('hidden');
+        setTimeout(() => { 
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 500);
+      };
+      closeButton.addEventListener('click', closeNotification);
+      if (role !== 'security') {
+        setTimeout(closeNotification, 5000);
+      }
+    });
+  });
+</script>
+
+{%endblock%}
+
+</body>
+</html>

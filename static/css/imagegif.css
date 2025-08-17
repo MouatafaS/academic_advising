@@ -1,0 +1,12 @@
+.imagegif{
+    height: 450px;
+    width: 100%;
+    background-color: blue;
+    background-clip: border-box;
+    border-radius: .25rem;
+
+}
+.imag{
+    height: 450px;
+    width: 100%;
+}

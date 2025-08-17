@@ -1,0 +1,76 @@
+{% extends 'mainn.html' %}
+
+{% block body %}
+<style>
+    /* Add some professional styling */
+    .schedule-table {
+        width: 90%;
+        margin: 40px auto;
+        border-collapse: collapse;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        font-family: Arial, sans-serif;
+    }
+    .schedule-table th, .schedule-table td {
+        border: 1px solid #ddd;
+        padding: 12px 15px;
+        text-align: center;
+    }
+    .schedule-table thead th {
+        background-color: #4CAF50; /* A nice green color */
+        color: white;
+        font-size: 1.1em;
+    }
+    .schedule-table tbody tr:nth-of-type(even) {
+        background-color: #f9f9f9;
+    }
+    .schedule-table tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+    .time-slot {
+        font-weight: bold;
+        background-color: #f2f2f2;
+    }
+    .available {
+        background-color: #e8f5e9; /* Light green for available slots */
+        color: #388e3c;
+        font-weight: bold;
+    }
+
+
+</style>
+
+<div class="container">
+    <h2 class="text-center my-4">Academic Advisor Schedule</h2>
+
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                {% for day in days_of_week %}
+                    <th>{{ day }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for time_slot, days in schedule_grid.items() %}
+            <tr>
+                <td class="time-slot">{{ time_slot }}</td>
+                
+                {# Loop through the days in the specified order #}
+                {% for day_name in days_of_week %}
+                    {% set slot_info = days[day_name] %}
+                    
+                    {% if slot_info and slot_info.available %}
+                        <td class="available">✓ متاح</td>
+                    {% else %}
+                        <td></td> {# Empty cell if not available #}
+                    {% endif %}
+                {% endfor %}
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
